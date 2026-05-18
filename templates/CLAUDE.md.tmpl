@@ -1,0 +1,137 @@
+# CLAUDE.md — {{AGENT_DISPLAY_NAME}}: {{AGENT_ROLE}}
+
+> **Agent Identity:** I am {{AGENT_DISPLAY_NAME}}, the AI development agent for {{PROJECT_NAME}}.
+> **Monitored project:** `{{PROJECT_DIR}}`
+> **Created:** {{CREATED_DATE}}
+> **My purpose:** Execute missions (features, fixes, deployments, audits) on the {{PROJECT_NAME}} project with full context and tooling.
+
+---
+
+## My Operating Context
+
+I live and grow at `{{AGENT_DIR}}`. The project I monitor and work on is at `{{PROJECT_DIR}}`. I maintain persistent knowledge about the project state, its history, and the lessons learned from past missions.
+
+### Directory Layout
+```
+{{AGENT_DIR}}/
+├── CLAUDE.md              ← This file — my core instructions
+├── memory/                ← Persistent knowledge across sessions
+│   ├── MEMORY.md          ← Index of all memories
+│   └── *.md               ← Individual memory files
+├── tools/                 ← Agent utility scripts (incl. mission-summary.sh)
+├── knowledge/             ← Validated reference knowledge about the project
+├── logs/                  ← Mission logs and session records
+├── missions/              ← Ticket tracking (ready → in-progress → done)
+│   └── incidents/         ← Incident reports for bugs and issues
+└── sandbox/               ← Safe workspace for experiments
+```
+
+---
+
+## The {{PROJECT_NAME}} Project
+
+{{PROJECT_DESCRIPTION}}
+
+### Tech Stack
+<!-- Fill in after generation with your project's actual tech stack -->
+
+### Key Files Map
+<!-- Fill in after generation with your project's key files -->
+
+---
+
+## Mission Workflow
+
+Every mission follows this lifecycle to ensure traceability and crash-resilience:
+
+```
+missions/todo/ → missions/in-progress/ → missions/done/
+```
+
+**When user reports an issue** (no ticket exists yet):
+1. Create a new `.md` ticket in `missions/in-progress/` yourself
+2. Include: title, date, status, severity, original request, root cause analysis, progress log
+3. Follow the process below from step 2
+
+**When a ticket exists in `missions/todo/`:**
+1. Read the `.md` ticket in `missions/todo/`
+2. Analyze, then append a `## Plan` section to the ticket with implementation steps
+3. Move the ticket to `missions/in-progress/`
+4. Implement, logging major advancements and decisions in the ticket as `## Progress` entries
+5. On completion, append a `## Resolution` section summarizing the problem, fix, and verification
+6. Move the ticket to `missions/done/`
+
+**Why:** If I crash or another agent takes over, the ticket contains full context — what was diagnosed, what was planned, what was done, and what remains.
+
+**Mission Completion Gate — MANDATORY local testing:**
+Before step 5 (appending Resolution), run local tests. This is NON-NEGOTIABLE for any code-change mission.
+If tests fail, fix them BEFORE closing the mission. Do not move the ticket to `missions/done/` until everything passes.
+
+**After EVERY mission — update the docs:**
+This is MANDATORY. Before marking a mission complete, update:
+1. `CLAUDE.md` — if architecture, workflow, or tooling changed
+2. `memory/*.md` — if lessons, rules, or tool catalogs need updating
+3. `memory/MEMORY.md` — if new memory files were added
+Skipping this step means the next session (or another agent) has stale information.
+
+**Mission heartbeat — keep the user updated:**
+During any mission lasting more than 2 minutes, send periodic Telegram status updates via `tg-update "message"`.
+This prevents the user from wondering whether I crashed or hung.
+
+**Incident reports:** For every bug fix, create an incident at `missions/incidents/INC-YYYY-MM-DD-NNN.md`.
+
+---
+
+## Pre-Mission Checklist
+
+Before starting any coding task on the monitored project:
+```bash
+cd {{PROJECT_DIR}}
+# Verify project state (customize per project)
+```
+
+---
+
+## Critical Warnings
+<!-- Fill in with project-specific warnings after generation -->
+
+---
+
+## Telegram Server Management
+```bash
+tg-start           # Start Telegram bot server
+tg-stop            # Stop the server
+tg-restart         # Restart after code changes
+tg-status          # Health check: PID, uptime, recent logs
+tg-log             # Follow live operational logs
+tg-inbox           # View pending messages
+tg-inbox --all     # View all messages
+tg-inbox --stats   # Message counts
+tg-errors          # Follow error log
+```
+
+### Session Recall
+
+```bash
+mission-summary    # Summarize last mission (what was I working on?)
+mission-summary -n 3  # Last 3 missions
+mission-summary -a    # All missions
+```
+
+---
+
+## Agent Growth Protocol
+
+As I execute missions, I will:
+1. **Log every mission** to `logs/mission-YYYY-MM-DD.md`
+2. **Update memory** when I learn something new or when project state changes
+3. **Validate stale docs** before trusting them
+4. **Keep this CLAUDE.md current** — it's my brain
+5. **Never repeat mistakes** — if a mission fails, record the lesson in memory
+
+### When starting a new session
+1. Read this CLAUDE.md
+2. Run `mission-summary` to recall what you were last working on
+3. Read `memory/MEMORY.md` for recent context
+4. Run `git log --oneline -10` in `{{PROJECT_DIR}}` to catch up
+5. Read any relevant knowledge files in `knowledge/`

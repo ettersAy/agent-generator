@@ -1,0 +1,82 @@
+#!/usr/bin/env zsh
+# Check the health/status of the {{AGENT_DISPLAY_NAME}} Telegram bot server.
+# Usage: ./scripts/telegram-status.sh
+# Alias:  tg-status
+
+AGENT_DIR="{{AGENT_DIR}}"
+PID_FILE="$AGENT_DIR/.telegram-server.pid"
+LOG_FILE="$AGENT_DIR/logs/telegram.log"
+STATE_FILE="$AGENT_DIR/.telegram-last-update"
+ENV_FILE="$AGENT_DIR/.env"
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  {{AGENT_DISPLAY_NAME}} Telegram Server Status"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+echo ""
+echo "Configuration:"
+export $(grep -v '^#' "$ENV_FILE" | xargs 2>/dev/null || true)
+if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
+  echo "   Bot token: ...${TELEGRAM_BOT_TOKEN: -8}"
+else
+  echo "   Bot token: NOT SET"
+fi
+if [ -n "$TELEGRAM_CHAT_ID" ]; then
+  echo "   Chat ID:   $TELEGRAM_CHAT_ID"
+else
+  echo "   Chat ID:   NOT SET"
+fi
+
+echo ""
+echo "Process:"
+if [ -f "$PID_FILE" ]; then
+  PID=$(cat "$PID_FILE")
+  if kill -0 "$PID" 2>/dev/null; then
+    echo "   Status: Running (PID: $PID)"
+    ELAPSED=$(ps -o etime= -p "$PID" 2>/dev/null | xargs)
+    echo "   Uptime: $ELAPSED"
+  else
+    echo "   Status: Dead (stale PID $PID)"
+  fi
+else
+  echo "   Status: Not running (no PID file)"
+  STRAY=$(pgrep -f "telegram-server.js" 2>/dev/null || true)
+  if [ -n "$STRAY" ]; then
+    echo "   Stray process found: $STRAY"
+  fi
+fi
+
+echo ""
+echo "State:"
+if [ -f "$STATE_FILE" ]; then
+  LAST=$(cat "$STATE_FILE")
+  echo "   Last update ID: $LAST"
+else
+  echo "   Last update ID: 0 (no messages processed yet)"
+fi
+
+echo ""
+echo "Recent logs:"
+if [ -f "$LOG_FILE" ]; then
+  tail -5 "$LOG_FILE"
+else
+  echo "   (no log file yet)"
+fi
+
+echo ""
+echo "API connectivity:"
+if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
+  BOT_INFO=$(curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getMe" 2>&1)
+  if [ "$(echo "$BOT_INFO" | jq -r '.ok' 2>/dev/null)" = "true" ]; then
+    USERNAME=$(echo "$BOT_INFO" | jq -r '.result.username')
+    NAME=$(echo "$BOT_INFO" | jq -r '.result.first_name')
+    echo "   Connected to @${USERNAME} (${NAME})"
+  else
+    echo "   API error: $BOT_INFO"
+  fi
+else
+  echo "   Skipped (no token)"
+fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

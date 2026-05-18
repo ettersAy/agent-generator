@@ -1,0 +1,26 @@
+# Secrets
+.env
+*.token
+*secret*
+
+# PID files
+*.pid
+.telegram-last-update
+
+# Node
+node_modules/
+package-lock.json
+
+# Logs
+logs/*.log
+logs/*.jsonl
+
+# Generated agent configs
+.last-gen-config.env
+
+# Sandbox (experimental work)
+sandbox/
+
+# OS files
+.DS_Store
+Thumbs.db

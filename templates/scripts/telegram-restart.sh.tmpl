@@ -1,0 +1,16 @@
+#!/usr/bin/env zsh
+# Restart the {{AGENT_DISPLAY_NAME}} Telegram bot server.
+# Usage: ./scripts/telegram-restart.sh
+# Alias:  tg-restart
+
+set -e
+
+AGENT_DIR="{{AGENT_DIR}}"
+
+echo "Restarting Telegram server..."
+
+"$AGENT_DIR/scripts/telegram-stop.sh"
+
+sleep 1
+
+"$AGENT_DIR/scripts/telegram-start.sh"

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# {{AGENT_DISPLAY_NAME}} — Mission heartbeat via Telegram
+# Usage: bash tools/telegram-heartbeat.sh "status message"
+# Alias:  tg-update "status message"
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+"$SCRIPT_DIR/telegram-send.sh" "$1"

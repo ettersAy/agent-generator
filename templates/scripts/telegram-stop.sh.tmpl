@@ -1,0 +1,44 @@
+#!/usr/bin/env zsh
+# Stop the {{AGENT_DISPLAY_NAME}} Telegram bot server.
+# Usage: ./scripts/telegram-stop.sh
+# Alias:  tg-stop
+
+set -e
+
+AGENT_DIR="{{AGENT_DIR}}"
+PID_FILE="$AGENT_DIR/.telegram-server.pid"
+
+if [ ! -f "$PID_FILE" ]; then
+  echo "No PID file found — server doesn't appear to be running"
+  PIDS=$(pgrep -f "telegram-server.js" 2>/dev/null || true)
+  if [ -n "$PIDS" ]; then
+    echo "   Found stray process(es): $PIDS"
+    echo "   Kill with: kill $PIDS"
+  fi
+  exit 0
+fi
+
+PID=$(cat "$PID_FILE")
+
+if ! kill -0 "$PID" 2>/dev/null; then
+  echo "Server not running (PID $PID is gone), cleaning up PID file"
+  rm -f "$PID_FILE"
+  exit 0
+fi
+
+echo "Stopping Telegram server (PID: $PID)..."
+kill "$PID"
+
+for i in $(seq 1 10); do
+  if ! kill -0 "$PID" 2>/dev/null; then
+    echo "Server stopped"
+    rm -f "$PID_FILE"
+    exit 0
+  fi
+  sleep 0.5
+done
+
+echo "Server didn't stop gracefully, force killing..."
+kill -9 "$PID" 2>/dev/null || true
+rm -f "$PID_FILE"
+echo "Server force-stopped"

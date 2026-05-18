@@ -1,0 +1,8 @@
+{
+  "name": "agent-generator-bot",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.2"
+  }
+}

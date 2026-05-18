@@ -1,0 +1,13 @@
+# {{AGENT_DISPLAY_NAME}} Shell Aliases
+# Source this file to get shortcuts for managing the Telegram server.
+# Add to your ~/.zshrc: source {{AGENT_DIR}}/tools/aliases.sh
+
+alias tg-start='{{AGENT_DIR}}/scripts/telegram-start.sh'
+alias tg-stop='{{AGENT_DIR}}/scripts/telegram-stop.sh'
+alias tg-restart='{{AGENT_DIR}}/scripts/telegram-restart.sh'
+alias tg-status='{{AGENT_DIR}}/scripts/telegram-status.sh'
+alias tg-log='tail -f {{AGENT_DIR}}/logs/telegram.log'
+alias tg-inbox='{{AGENT_DIR}}/tools/telegram-inbox.sh'
+alias tg-errors='tail -f {{AGENT_DIR}}/logs/errors.log'
+alias tg-update='bash {{AGENT_DIR}}/tools/telegram-heartbeat.sh'
+alias mission-summary='{{AGENT_DIR}}/tools/mission-summary.sh'

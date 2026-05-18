@@ -1,0 +1,32 @@
+---
+name: incident-reports
+description: Procedure for creating incident reports after bug fixes
+type: feedback
+---
+
+# Incident Reports
+
+**Why:** Every bug fix must be documented so patterns emerge and root causes are tracked.
+
+**How to apply:** After every bug fix or production issue, create an incident report.
+
+## Report Template
+
+Create a file at `missions/incidents/INC-YYYY-MM-DD-NNN.md`:
+
+```markdown
+# Incident INC-YYYY-MM-DD-NNN
+
+| Field | Detail |
+|-------|--------|
+| **Date** | YYYY-MM-DD |
+| **Severity** | critical / high / medium / low |
+| **Component** | which part of the system |
+| **Symptoms** | what was observed |
+| **Root Cause** | the underlying issue |
+| **Fix** | what was changed |
+| **Verification** | how the fix was confirmed |
+| **Lessons** | what to do differently |
+```
+
+Always reference the incident in the mission ticket's Resolution section.
