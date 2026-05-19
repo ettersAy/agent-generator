@@ -14,13 +14,13 @@ type: project
 
 | Agent | Project | Created | Telegram | Status |
 |-------|---------|---------|----------|--------|
-| (none yet) | | | | |
+| [Tamarine Bot](/srv/dev/agents/tamarine-bot) | TamarineApp — Student exercise generator and correction platform | 2026-05-19 | @Tamarine_bot | Active |
 
 ## Template Version
 
-Based on Mouss-ai v7 architecture (2026-05-09):
+Based on Mouss-ai architecture (v7, 2026-05-09), updated for v2 mission queue (2026-05-18):
 - Node.js Telegram bot with long-polling
-- Claude CLI background workers, no hard timeout
+- Queue-based mission execution with shell dispatcher
+- Claude CLI background workers via mission-runner.sh
 - DeepSeek API for quick responses
-- Heartbeat-based progress editing
 - Mission lifecycle: todo → in-progress → done/failed
