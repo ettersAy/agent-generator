@@ -9,5 +9,8 @@
 ## Procedures
 - [generation-checklist](generation-checklist.md) — Pre/post generation validation steps
 
+## Systems
+- [inter-agent-incident-system](inter-agent-incident-system.md) — Central incident reporting for communication problems (MCP tool + shell script + bridge auto-detection)
+
 ## Tools
 - `tools/mission-summary.sh` — Print a summary of the most recent mission(s). Use `mission-summary` (or `./tools/mission-summary.sh`) to recall what I was last working on. Supports `-n N` for N missions, `-a` for all.

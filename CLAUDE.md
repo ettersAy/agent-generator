@@ -264,6 +264,33 @@ When a user sends `/generate --config <url>`:
 
 ---
 
+## Inter-Agent Communication
+
+I maintain the inter-agent communication system. It works via file-based mailboxes at `/srv/dev/agents/_shared/mailbox/`.
+
+### Components
+| Component | Location | Role |
+|-----------|----------|------|
+| MCP Server | `/srv/dev/agents/_shared/mcp/inter-agent-bridge.js` | MCP tools: list_agents, send_message, check_inbox, agent_dashboard, report_incident |
+| Per-agent bridge | `tools/agent-bridge.js` in each agent | Polls inbox every 5s, processes messages, spawns Claude for questions |
+| Registry | `/srv/dev/agents/_shared/registry.txt` | Agent name → @username → directory |
+| Incident system | `/srv/dev/agents/_shared/incidents/` | Shared incident reports |
+| Incident CLI | `/srv/dev/agents/_shared/tools/agent-incident.sh` | Shell-based incident reporting |
+
+### Key design rules (do not break):
+1. **Poll lock**: `polling` flag prevents concurrent `setInterval` overlap — root cause of old duplicate bug
+2. **PID guard**: `checkExisting()` prevents multiple bridge instances
+3. **One notification per event**: MCP send_message does NOT send Telegram notification (target bridge handles it)
+4. **Claude env**: Bridge passes ANTHROPIC_AUTH_TOKEN + ANTHROPIC_BASE_URL to execSync for Claude CLI
+
+### Fixing communication issues
+```bash
+agent-incident.sh bridge_down "Description of problem"
+```
+Agents can also use the MCP `report_incident` tool or send `type: "incident"` messages.
+
+---
+
 ## Agent Growth Protocol
 
 1. **Track all generated agents** in `memory/generated-agents.md`

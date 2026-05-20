@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "inter-agent": {
+      "command": "node",
+      "args": ["/srv/dev/agents/_shared/mcp/inter-agent-bridge.js"],
+      "env": {
+        "AGENT_NAME": "agent-generator",
+        "AGENT_DIR": "/srv/dev/agents/agent-generator"
+      }
+    }
+  }
+}
