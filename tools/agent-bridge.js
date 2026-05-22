@@ -37,9 +37,10 @@ const ERROR_LIMIT = 5; // consecutive errors before triggering incident
 // ── Helpers ──────────────────────────────────────────────────────────────
 
 function ts() { return new Date().toISOString(); }
+function fmtTs() { return new Date().toISOString().replace("T", " ").slice(0, 19); }
 
 function log(msg) {
-  const line = `[${ts()}] ${msg}`;
+  const line = `[${fmtTs()}] ${msg}`;
   console.log(line);
   try {
     const dir = path.dirname(LOG_FILE);

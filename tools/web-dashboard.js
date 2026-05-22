@@ -48,6 +48,11 @@ function timeAgo(iso) {
   return `${Math.floor(sec / 86400)}d ago`;
 }
 
+function fmtTs(d) {
+  const dt = d instanceof Date ? d : new Date(d);
+  return dt.toISOString().replace("T", " ").slice(0, 19);
+}
+
 function pidAlive(pidFile) {
   if (!fs.existsSync(pidFile)) return false;
   try { process.kill(parseInt(fs.readFileSync(pidFile, "utf8")), 0); return true; } catch { return false; }
@@ -496,7 +501,7 @@ ${headerHtml("")}
 <tr><td>ID</td><td><code>${esc(mission.id)}</code></td></tr>
 <tr><td>Status</td><td><span class="tag ${mission.runnerAlive ? 'online' : (mission.status === 'done' ? 'online' : (mission.status === 'failed' ? 'offline' : 'offline'))}">${esc(mission.status)}</span></td></tr>
 <tr><td>File</td><td><code>missions/${esc(missionDir)}/${esc(mission.filename)}</code></td></tr>
-<tr><td>Last Modified</td><td>${esc(mission.mtime.toISOString())} (${timeAgo(mission.mtime)})</td></tr>
+<tr><td>Last Modified</td><td>${fmtTs(mission.mtime)} (${timeAgo(mission.mtime)})</td></tr>
 <tr><td>Runner PID</td><td>${esc(String(mission.pid))}</td></tr>
 <tr><td>Runner Alive</td><td>${mission.runnerAlive ? 'Yes' : 'No'}</td></tr>
 <tr><td>Result Size</td><td>${mission.resultSize ? (mission.resultSize > 1024 ? Math.round(mission.resultSize/1024) + ' KB' : mission.resultSize + ' B') : 'No result yet'}</td></tr>
@@ -1095,7 +1100,7 @@ function renderMailbox(agentFilter) {
           </div>
           <div style="display:flex;gap:6px;align-items:center">
             <span class="msg-type ${esc(m.type || 'question')}">${esc(m.type || 'question')}</span>
-            <span class="msg-date">${m._mtime ? m._mtime.toISOString().slice(0,19).replace('T',' ') : '—'}</span>
+            <span class="msg-date">${m._mtime ? fmtTs(m._mtime) : '—'}</span>
           </div>
         </div>
         <div class="msg-subject">${esc(m.subject || '(no subject)')}</div>
@@ -1160,7 +1165,7 @@ function renderIncidents() {
             <span class="incident-agent">${esc(inc.agent || inc.from || '?')}</span>
             <span class="incident-type ${esc((inc.type || 'manual').replace(/_/g, '-'))}">${esc((inc.type || 'manual').replace(/_/g, ' '))}</span>
           </div>
-          <span class="incident-date">${inc._mtime ? inc._mtime.toISOString().slice(0,19).replace('T',' ') : '—'}</span>
+          <span class="incident-date">${inc._mtime ? fmtTs(inc._mtime) : '—'}</span>
         </div>
         <div class="incident-detail">${esc(inc.detail || inc.message || JSON.stringify(inc))}</div>
       </div>`).join("");
@@ -1422,7 +1427,7 @@ const server = http.createServer(async (req, res) => {
 
 | Field | Detail |
 |-------|--------|
-| **Created** | ${now.toISOString()} |
+| **Created** | ${fmtTs(now)} |
 | **Status** | todo |
 | **Source** | ${esc(data.source || "Web Dashboard")} |
 | **PID** | - |
@@ -1435,7 +1440,7 @@ ${data.body}
 
 | Timestamp | Event | Detail |
 |-----------|-------|--------|
-| ${now.toISOString()} | created | Mission queued from web dashboard |
+| ${fmtTs(now)} | created | Mission queued from web dashboard |
 `;
         const todoDir = path.join(MISSIONS_DIR, "todo");
         if (!fs.existsSync(todoDir)) fs.mkdirSync(todoDir, { recursive: true });
