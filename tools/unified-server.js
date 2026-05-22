@@ -119,6 +119,49 @@ function main() {
     log(`${agent.name} started (PID ${child.pid})`);
   }
 
+  // ── Start Mission Dispatcher (only for agent-generator) ────────────────
+  const dispatcherScript = path.join(HUB_DIR, "scripts", "mission-dispatcher.sh");
+  let dispatcher = null;
+
+  function startDispatcher() {
+    if (!fs.existsSync(dispatcherScript)) return;
+
+    // Clean up stale PID so dispatcher can start fresh
+    const dpFile = path.join(HUB_DIR, ".mission-dispatcher.pid");
+    try { fs.unlinkSync(dpFile); } catch {}
+
+    const proc = spawn("bash", [dispatcherScript], {
+      cwd: HUB_DIR,
+      stdio: ["ignore", "pipe", "pipe"],
+      env: { ...process.env, AGENT_DIR: HUB_DIR },
+    });
+
+    proc.stdout.on("data", (d) => {
+      process.stdout.write(
+        d.toString().split("\n").filter(Boolean).map((l) => `[dispatcher] ${l}\n`).join("")
+      );
+    });
+
+    proc.stderr.on("data", (d) => {
+      process.stderr.write(
+        d.toString().split("\n").filter(Boolean).map((l) => `[dispatcher] ${l}\n`).join("")
+      );
+    });
+
+    proc.on("exit", (code, signal) => {
+      log(`dispatcher exited (code=${code}, signal=${signal}), restarting in 5s...`);
+      setTimeout(() => {
+        if (dispatcher) startDispatcher();
+      }, 5000);
+    });
+
+    dispatcher = proc;
+    children.push(proc);
+    log(`dispatcher started (PID ${proc.pid})`);
+  }
+
+  startDispatcher();
+
   // ── Signal handling ────────────────────────────────────────────────────
 
   const shutdown = () => {

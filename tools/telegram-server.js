@@ -178,7 +178,7 @@ const customCommands = {
       sections.push(section);
     }
     await this.tg.sendMessage(chatId,
-      sections.length === 0 ? "<b>Mission Queue</b>\n\nEmpty. Send <b>/mission &lt;task&gt;</b>." : `<b>Mission Queue</b>\n\n${sections.join("\n")}`
+      sections.length === 0 ? "<b>Mission Queue</b>\n\nEmpty. Send <b>/mission</b> or <b>/NewMission</b>." : `<b>Mission Queue</b>\n\n${sections.join("\n")}`
     );
   },
 
@@ -192,6 +192,60 @@ const customCommands = {
     if (!match) { await this.tg.sendMessage(chatId, `No pending mission matching "${searchId}".`); return; }
     fs.unlinkSync(path.join(todoDir, match));
     await this.tg.sendMessage(chatId, `Cancelled: <b>${match.replace(".md", "")}</b>`);
+  },
+
+  "^/NewMission\\b": async function (chatId, args, updateId) {
+    const taskText = args.trim() || "(no instructions)";
+    const missionFile = this.missions.create(taskText);
+    let content = fs.readFileSync(missionFile, "utf8");
+    content = content.replace(
+      "| **Status** | todo |",
+      "| **Status** | todo |\n| **Mode** | new |"
+    );
+    fs.writeFileSync(missionFile, content);
+    const basename = path.basename(missionFile);
+    this.log(`NewMission queued: ${basename}`);
+    let queuePos = 0;
+    try {
+      if (fs.existsSync(this.config.M_TODO)) {
+        queuePos = fs.readdirSync(this.config.M_TODO).filter((f) => f.endsWith(".md")).length;
+      }
+    } catch {}
+    await this.tg.sendMessage(chatId,
+      `<b>New Mission queued</b>\n` +
+        `<pre>${taskText.slice(0, 120)}</pre>\n` +
+        `ID: <code>${basename.replace(".md", "")}</code>\n` +
+        `Queue position: ${queuePos}\n` +
+        `<i>Fresh Claude session — no limits.</i>`
+    );
+    this.store.markReplied(updateId);
+  },
+
+  "^/mission\\b": async function (chatId, args, updateId) {
+    const taskText = args.trim() || "(no instructions)";
+    const missionFile = this.missions.create(taskText);
+    let content = fs.readFileSync(missionFile, "utf8");
+    content = content.replace(
+      "| **Status** | todo |",
+      "| **Status** | todo |\n| **Mode** | continue |"
+    );
+    fs.writeFileSync(missionFile, content);
+    const basename = path.basename(missionFile);
+    this.log(`Mission (continue) queued: ${basename}`);
+    let queuePos = 0;
+    try {
+      if (fs.existsSync(this.config.M_TODO)) {
+        queuePos = fs.readdirSync(this.config.M_TODO).filter((f) => f.endsWith(".md")).length;
+      }
+    } catch {}
+    await this.tg.sendMessage(chatId,
+      `<b>Mission queued (continue)</b>\n` +
+        `<pre>${taskText.slice(0, 120)}</pre>\n` +
+        `ID: <code>${basename.replace(".md", "")}</code>\n` +
+        `Queue position: ${queuePos}\n` +
+        `<i>Continues last Claude session — no limits.</i>`
+    );
+    this.store.markReplied(updateId);
   },
 
   _continueGenSession: async function (chatId, text, updateId) {
@@ -209,7 +263,8 @@ const startMessage = function (chatId, updateId) {
       `• <b>/list</b> — List all agents\n` +
       `• <b>/status &lt;name&gt;</b> — Agent status\n` +
       `• <b>/ask &lt;agent&gt; &lt;question&gt;</b> — Ask another agent\n` +
-      `• <b>/mission &lt;task&gt;</b> — Queue mission\n` +
+      `• <b>/mission &lt;task&gt;</b> — Continue last session\n` +
+      `• <b>/NewMission &lt;task&gt;</b> — New Claude session\n` +
       `• <b>/queue</b> — View mission queue\n` +
       `• <b>/cancel &lt;id&gt;</b> — Cancel pending\n` +
       `• <b>Any text</b> — Quick AI answer\n\n` +

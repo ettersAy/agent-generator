@@ -174,6 +174,52 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .detail-page hr{border:none;border-top:1px solid #21262d;margin:16px 0}
 .detail-back{display:inline-block;margin-bottom:16px;color:#8b949e;text-decoration:none;font-size:13px}
 .detail-back:hover{color:#58a6ff}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:12px;color:#8b949e;margin-bottom:4px;font-weight:600}
+.form-group input,.form-group textarea,.form-group select{width:100%;background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:8px 12px;border-radius:6px;font-size:13px;font-family:inherit}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{outline:none;border-color:#58a6ff}
+.form-group textarea{resize:vertical;min-height:80px}
+.form-group .hint{font-size:10px;color:#484f58;margin-top:2px}
+.form-actions{display:flex;gap:8px;margin-top:16px}
+.form-card{max-width:700px;margin:0 auto;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:20px 24px}
+.form-card h2{color:#58a6ff;font-size:16px;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #21262d}
+.form-progress{display:flex;gap:4px;margin-bottom:20px}
+.form-progress .step-dot{flex:1;height:4px;background:#21262d;border-radius:2px}
+.form-progress .step-dot.done{background:#3fb950}
+.form-progress .step-dot.current{background:#58a6ff}
+.form-row{display:flex;gap:12px}
+.form-row .form-group{flex:1}
+.mailbox-msg{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:12px 16px;margin-bottom:8px;font-size:12px}
+.mailbox-msg .msg-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:4px}
+.mailbox-msg .msg-from{color:#58a6ff;font-weight:600}
+.mailbox-msg .msg-to{color:#3fb950;font-weight:600}
+.mailbox-msg .msg-date{color:#484f58;font-size:10px}
+.mailbox-msg .msg-type{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:600}
+.mailbox-msg .msg-type.question{background:#1b3824;color:#3fb950}
+.mailbox-msg .msg-type.answer{background:#1b3824;color:#3fb950}
+.mailbox-msg .msg-type.config-request{background:#341a4a;color:#bc8cff}
+.mailbox-msg .msg-type.incident{background:#3a1c1c;color:#f85149}
+.mailbox-msg .msg-body{padding:8px;background:#161b22;border-radius:4px;color:#8b949e;margin-top:6px;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto}
+.incident-card{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:12px 16px;margin-bottom:8px;font-size:12px}
+.incident-card .incident-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:4px}
+.incident-card .incident-agent{color:#58a6ff;font-weight:600}
+.incident-card .incident-type{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:600;text-transform:uppercase}
+.incident-card .incident-type.bridge_down{background:#3a1c1c;color:#f85149}
+.incident-card .incident-type.message_lost{background:#342b10;color:#d29922}
+.incident-card .incident-type.duplicate_messages{background:#342b10;color:#d29922}
+.incident-card .incident-type.error_loop{background:#3a1c1c;color:#f85149}
+.incident-card .incident-type.timeout{background:#342b10;color:#d29922}
+.incident-card .incident-type.manual{background:#1b3824;color:#3fb950}
+.incident-card .incident-detail{padding:8px;background:#161b22;border-radius:4px;color:#8b949e;margin-top:6px;white-space:pre-wrap;word-break:break-word}
+.incident-card .incident-date{color:#484f58;font-size:10px}
+.sys-stat{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #21262d;font-size:12px}
+.sys-stat:last-child{border-bottom:none}
+.sys-stat-label{color:#8b949e;min-width:120px}
+.sys-stat-value{color:#c9d1d9;font-family:monospace}
+.sys-stat-bar{flex:1;height:6px;background:#21262d;border-radius:3px;overflow:hidden;max-width:200px}
+.sys-stat-fill{height:100%;background:#3fb950;border-radius:3px;transition:width .5s}
+.sys-stat-fill.warn{background:#d29922}
+.sys-stat-fill.crit{background:#f85149}
 .meta-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
 .meta-table td{padding:6px 12px;border:1px solid #21262d;color:#8b949e}
 .meta-table td:first-child{color:#58a6ff;font-weight:600;width:140px;background:#0d1117}
@@ -209,6 +255,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 function headerHtml(active) {
   const links = [
     ["/", "Dashboard"],
+    ["/generate", "Generate"],
+    ["/mission/new", "New Mission"],
+    ["/mailbox", "Mailbox"],
+    ["/incidents", "Incidents"],
     ["/wiki", "Wiki"],
     ["/logs", "Logs"],
   ];
@@ -328,6 +378,23 @@ ${headerHtml("dashboard")}
   ${controlsCard}
   ${missionCard('Recently Done', queue.done.slice(-8).reverse(), '✅', 5)}
   ${missionCard('Recently Failed', queue.failed.slice(-8).reverse(), '❌', 5)}
+      ${(() => {
+        const stats = getSystemStats();
+        const rows = Object.entries(stats.processes).map(([name, p]) => {
+          const memPercent = p.memMB ? Math.min(100, (parseFloat(p.memMB) / 500) * 100) : 0;
+          const barClass = memPercent > 80 ? 'crit' : (memPercent > 50 ? 'warn' : '');
+          return '<div class="sys-stat"><span class="sys-stat-label">' + esc(name) + '</span><span class="sys-stat-value">PID ' + esc(String(p.pid)) + ' | ' + esc(String(p.memMB || '?')) + ' MB | ' + esc(String(p.uptime || '?')) + '</span><div class="sys-stat-bar"><div class="sys-stat-fill ' + barClass + '" style="width:' + memPercent + '%"></div></div></div>';
+        }).join("");
+        const q = stats.queueCounts;
+        const a = stats.agentCounts;
+        return '<div class="card"><h2>📊 System Stats</h2><div class="card-body">' +
+          rows +
+          '<div style="margin-top:8px;padding-top:8px;border-top:1px solid #21262d;display:flex;gap:16px;font-size:11px;color:#8b949e;flex-wrap:wrap">' +
+          '<span>Queue: ' + q.todo + ' todo | ' + q.inProgress + ' running | ' + q.done + ' done | ' + q.failed + ' failed</span>' +
+          '<span>Agents: ' + a.online + '/' + a.total + ' online</span>' +
+          '</div></div></div>';
+      })()}
+
 </div>
 <div id="toast" class="toast"></div>
 <script>
@@ -593,6 +660,7 @@ ${headerHtml("logs")}
     <input type="text" id="filter-input" value="${esc(filter)}" placeholder="keyword..." onkeydown="if(event.key==='Enter')applyFilter()">
     <button class="btn" onclick="applyFilter()">Apply</button>
     <button class="btn" onclick="location.href='/logs?source=${esc(source)}&lines=${lines}'">Clear</button>
+    <button class="btn active-toggle" id="live-btn" onclick="toggleLive()" style="margin-left:8px">🔴 Live</button>
   </div>
   <span style="font-size:11px;color:#484f58;margin-left:auto">${logContent.split('\\n').length} lines</span>
 </div>
@@ -615,6 +683,55 @@ function applyFilter() {
   if (val) params.set('filter', val);
   else params.delete('filter');
   location.search = params.toString();
+}
+
+let liveStream = null;
+function toggleLive() {
+  const btn = document.getElementById('live-btn');
+  const logDiv = document.querySelector('.log-view');
+  if (liveStream) {
+    // Stop streaming
+    liveStream.close();
+    liveStream = null;
+    btn.textContent = '🔴 Live';
+    btn.classList.remove('active-toggle');
+    return;
+  }
+  // Start streaming
+  btn.textContent = '⏸ Stop Live';
+  btn.classList.add('active-toggle');
+
+  const params = new URLSearchParams(location.search);
+  const source = params.get('source') || 'unified-server';
+  liveStream = new EventSource('/api/logs/stream/' + source);
+
+  liveStream.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    const lineEl = document.createElement('div');
+    if (data.class) lineEl.className = data.class;
+    lineEl.textContent = data.line;
+
+    // Escape HTML in the line except for our classes
+    if (!data.class) {
+      lineEl.textContent = '';
+      lineEl.appendChild(document.createTextNode(data.line));
+    }
+
+    logDiv.appendChild(lineEl);
+    logDiv.scrollTop = logDiv.scrollHeight;
+
+    // Keep max 1000 lines in view
+    while (logDiv.children.length > 1000) {
+      logDiv.removeChild(logDiv.firstChild);
+    }
+  };
+
+  liveStream.onerror = () => {
+    liveStream.close();
+    liveStream = null;
+    btn.textContent = '🔴 Live';
+    btn.classList.remove('active-toggle');
+  };
 }
 </script>
 </body>
@@ -695,6 +812,484 @@ ${md2html(mdContent)}
 </html>`;
 }
 
+
+// ── Agent Generation Form ───────────────────────────────────────────────────
+function renderGenerateForm() {
+  const steps = [
+    { key: "AGENT_NAME", label: "Agent name (kebab-case)", hint: "e.g. my-bot" },
+    { key: "AGENT_DISPLAY_NAME", label: "Agent display name", hint: "e.g. My Bot" },
+    { key: "AGENT_DIR", label: "Agent directory", hint: "Full path, e.g. /srv/dev/agents/my-bot" },
+    { key: "PROJECT_DIR", label: "Project directory", hint: "Full path, e.g. /srv/dev/my-app" },
+    { key: "PROJECT_NAME", label: "Project short name", hint: "e.g. MyApp" },
+    { key: "PROJECT_DESCRIPTION", label: "Project description", hint: "One-line description" },
+    { key: "TELEGRAM_BOT_TOKEN", label: "Telegram bot token", hint: "From @BotFather" },
+    { key: "TELEGRAM_CHAT_ID", label: "Telegram chat ID", hint: "Your numeric chat ID" },
+    { key: "ANTHROPIC_AUTH_TOKEN", label: "AI API auth token", hint: "DeepSeek or Anthropic key" },
+    { key: "ANTHROPIC_BASE_URL", label: "AI API base URL", hint: "e.g. https://api.deepseek.com/anthropic" },
+    { key: "GITHUB_REPO", label: "GitHub repo", hint: "owner/repo" },
+    { key: "PROD_URL", label: "Production URL", hint: "e.g. https://myapp.com" },
+    { key: "AGENT_USERNAME", label: "Bot username", hint: "e.g. @MyAppBot" },
+    { key: "AGENT_ROLE", label: "Agent role description", hint: "One-line role description" },
+  ];
+
+  const stepInputs = steps.map((s, i) => `
+    <div class="form-group">
+      <label>${esc(s.label)} <span style="color:#484f58;font-weight:400">(step ${i + 1}/14)</span></label>
+      <input type="text" id="field-${esc(s.key)}" placeholder="${esc(s.hint)}" />
+    </div>`).join("");
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Generate Agent</title>
+<style>${CSS}</style>
+</head>
+<body>
+${headerHtml("generate")}
+<div class="detail-page">
+<a class="detail-back" href="/">← Back to Dashboard</a>
+<div class="form-card">
+<h2>🧬 Generate New AI Agent</h2>
+<p style="color:#8b949e;font-size:12px;margin-bottom:16px">Fill in all fields to generate a complete AI agent with Telegram bot, mission queue, and full configuration.</p>
+<div class="form-progress" id="progress-bar">
+  ${steps.map(() => '<div class="step-dot"></div>').join("")}
+</div>
+<form id="gen-form" onsubmit="submitGeneration(event)">
+${stepInputs}
+<div class="form-actions">
+  <button type="submit" class="btn green" id="submit-btn">⚡ Generate Agent</button>
+  <button type="reset" class="btn" onclick="resetProgress()">Reset</button>
+</div>
+</form>
+<div id="gen-result" style="margin-top:16px;display:none"></div>
+</div>
+</div>
+<script>
+function updateProgress() {
+  const fields = document.querySelectorAll('#gen-form input[type=text]');
+  let filled = 0;
+  fields.forEach(f => { if (f.value.trim()) filled++; });
+  const dots = document.querySelectorAll('#progress-bar .step-dot');
+  dots.forEach((d, i) => {
+    d.className = 'step-dot' + (i < filled ? ' done' : '') + (i === filled ? ' current' : '');
+  });
+}
+document.querySelectorAll('#gen-form input[type=text]').forEach(i => {
+  i.addEventListener('input', updateProgress);
+});
+
+async function submitGeneration(e) {
+  e.preventDefault();
+  const fields = document.querySelectorAll('#gen-form input[type=text]');
+  const data = {};
+  fields.forEach(f => { data[f.id.replace('field-', '')] = f.value.trim(); });
+
+  // Validate all fields
+  const missing = Object.entries(data).filter(([k, v]) => !v).map(([k]) => k);
+  if (missing.length > 0) {
+    showResult('Please fill all fields. Missing: ' + missing.join(', '), true);
+    return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating...';
+  showResult('Generating agent... this may take up to 60 seconds.', false);
+
+  try {
+    const resp = await fetch('/api/generate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    const result = await resp.json();
+    if (result.ok) {
+      showResult('<strong>Agent generated successfully!</strong><br><br><pre style=\"background:#0d1117;padding:12px;border-radius:4px;max-height:300px;overflow-y:auto;font-size:11px\">' + esc(result.output || '') + '</pre><br><a href=\"/agent?name=\' + esc(result.agentName) + '\" style=\"color:#58a6ff\">View Agent →</a>', false);
+    } else {
+      showResult('Error: ' + (result.error || 'Unknown error'), true);
+    }
+  } catch(e) {
+    showResult('Request failed: ' + e.message, true);
+  }
+  btn.disabled = false;
+  btn.textContent = '⚡ Generate Agent';
+}
+
+function showResult(msg, isError) {
+  const div = document.getElementById('gen-result');
+  div.style.display = 'block';
+  div.style.padding = '12px 16px';
+  div.style.borderRadius = '6px';
+  div.style.fontSize = '13px';
+  div.style.background = isError ? '#3a1c1c' : '#1b3824';
+  div.style.color = isError ? '#f85149' : '#3fb950';
+  div.style.border = '1px solid ' + (isError ? '#da3633' : '#238636');
+  div.innerHTML = msg;
+}
+
+function resetProgress() {
+  setTimeout(updateProgress, 50);
+}
+</script>
+</body>
+</html>`;
+}
+
+// ── Mission Creation Form ────────────────────────────────────────────────────
+function renderMissionForm() {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>New Mission</title>
+<style>${CSS}</style>
+</head>
+<body>
+${headerHtml("new mission")}
+<div class="detail-page">
+<a class="detail-back" href="/">← Back to Dashboard</a>
+<div class="form-card">
+<h2>📋 Queue New Mission</h2>
+<p style="color:#8b949e;font-size:12px;margin-bottom:16px">Create a mission that will be picked up by the dispatcher and executed by a Claude CLI worker.</p>
+<form onsubmit="submitMission(event)">
+<div class="form-group">
+  <label>Mission Title</label>
+  <input type="text" id="mission-title" placeholder="e.g. Fix the login bug in Moussawer" required />
+</div>
+<div class="form-group">
+  <label>Description / Tasks</label>
+  <textarea id="mission-body" rows="8" placeholder="Describe what needs to be done. Be specific about tasks, files, and expected outcomes.&#10;&#10;Example:&#10;1. Read src/auth/login.ts&#10;2. Fix the token refresh logic&#10;3. Test with invalid tokens" required></textarea>
+  <div class="hint">Supports markdown. This will be saved as the mission file and executed by Claude.</div>
+</div>
+<div class="form-group">
+  <label>Source</label>
+  <input type="text" id="mission-source" placeholder="e.g. Telegram, Web Dashboard" value="Web Dashboard" />
+</div>
+<div class="form-actions">
+  <button type="submit" class="btn green" id="submit-btn">📤 Queue Mission</button>
+  <button type="reset" class="btn">Reset</button>
+</div>
+</form>
+<div id="mission-result" style="margin-top:16px;display:none"></div>
+</div>
+</div>
+<script>
+async function submitMission(e) {
+  e.preventDefault();
+  const title = document.getElementById('mission-title').value.trim();
+  const body = document.getElementById('mission-body').value.trim();
+  const source = document.getElementById('mission-source').value.trim() || 'Web Dashboard';
+  if (!title || !body) return;
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Creating...';
+
+  try {
+    const resp = await fetch('/api/missions/create', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ title, body, source })
+    });
+    const result = await resp.json();
+    const div = document.getElementById('mission-result');
+    div.style.display = 'block';
+    div.style.padding = '12px 16px';
+    div.style.borderRadius = '6px';
+    div.style.fontSize = '13px';
+    if (result.ok) {
+      div.style.background = '#1b3824';
+      div.style.color = '#3fb950';
+      div.style.border = '1px solid #238636';
+      div.innerHTML = '<strong>Mission queued!</strong> ID: <code>' + esc(result.id) + '</code><br>View in <a href=\"/mission?id=\' + esc(result.id) + '\" style=\"color:#58a6ff\">Mission Detail</a>';
+      document.getElementById('mission-title').value = '';
+      document.getElementById('mission-body').value = '';
+    } else {
+      div.style.background = '#3a1c1c';
+      div.style.color = '#f85149';
+      div.style.border = '1px solid #da3633';
+      div.textContent = 'Error: ' + (result.error || 'Unknown');
+    }
+  } catch(e) {
+    const div = document.getElementById('mission-result');
+    div.style.display = 'block';
+    div.style.background = '#3a1c1c';
+    div.style.color = '#f85149';
+    div.style.border = '1px solid #da3633';
+    div.style.padding = '12px 16px';
+    div.style.borderRadius = '6px';
+    div.style.fontSize = '13px';
+    div.textContent = 'Request failed: ' + e.message;
+  }
+  btn.disabled = false;
+  btn.textContent = '📤 Queue Mission';
+}
+</script>
+</body>
+</html>`;
+}
+
+// ── Inter-Agent Mailbox Viewer ───────────────────────────────────────────────
+function getMailboxMessages() {
+  const SHARED = "/srv/dev/agents/_shared";
+  const mailboxDir = path.join(SHARED, "mailbox");
+  const messages = [];
+  if (!fs.existsSync(mailboxDir)) return messages;
+
+  try {
+    const agents = fs.readdirSync(mailboxDir, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .map(d => d.name);
+
+    for (const agent of agents) {
+      const inboxDir = path.join(mailboxDir, agent, "inbox");
+      if (!fs.existsSync(inboxDir)) continue;
+      const files = fs.readdirSync(inboxDir).filter(f => f.endsWith(".json")).sort().reverse();
+      for (const f of files) {
+        try {
+          const raw = fs.readFileSync(path.join(inboxDir, f), "utf8");
+          const msg = JSON.parse(raw);
+          messages.push({
+            ...msg,
+            _recipient: agent,
+            _file: f,
+            _mtime: fs.statSync(path.join(inboxDir, f)).mtime
+          });
+        } catch {}
+      }
+    }
+  } catch {}
+  return messages;
+}
+
+function renderMailbox(agentFilter) {
+  let messages = getMailboxMessages();
+  if (agentFilter) {
+    messages = messages.filter(m =>
+      m._recipient === agentFilter || m.from === agentFilter
+    );
+  }
+
+  const agents = new Set();
+  messages.forEach(m => {
+    agents.add(m._recipient);
+    if (m.from) agents.add(m.from);
+  });
+
+  const filterOptions = ['<option value="">All Agents</option>']
+    .concat([...agents].sort().map(a =>
+      `<option value="${esc(a)}"${agentFilter === a ? ' selected' : ''}>${esc(a)}</option>`
+    )).join("");
+
+  const msgHtml = messages.length === 0
+    ? '<div class="empty-state">No messages found</div>'
+    : messages.map(m => `
+      <div class="mailbox-msg">
+        <div class="msg-header">
+          <div>
+            <span class="msg-from">${esc(m.from || '?')}</span>
+            <span style="color:#8b949e"> → </span>
+            <span class="msg-to">${esc(m._recipient)}</span>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span class="msg-type ${esc(m.type || 'question')}">${esc(m.type || 'question')}</span>
+            <span class="msg-date">${m._mtime ? m._mtime.toISOString().slice(0,19).replace('T',' ') : '—'}</span>
+          </div>
+        </div>
+        <div class="msg-body">${esc(typeof m.message === 'string' ? m.message : JSON.stringify(m.message, null, 2))}</div>
+      </div>`).join("");
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Inter-Agent Mailbox</title>
+<style>${CSS}</style>
+</head>
+<body>
+${headerHtml("mailbox")}
+<div class="detail-page">
+<a class="detail-back" href="/">← Back to Dashboard</a>
+<h2>📬 Inter-Agent Mailbox <span class="badge green" style="font-size:10px">${messages.length} msgs</span></h2>
+<div class="controls-bar" style="margin:0 0 12px;border:1px solid #30363d;border-radius:6px">
+  <div class="search-bar">
+    <label style="font-size:11px;color:#484f58">Filter Agent:</label>
+    <select onchange="location.search=this.value?'agent='+this.value:''">
+      ${filterOptions}
+    </select>
+  </div>
+  <span style="font-size:11px;color:#484f58;margin-left:auto">${messages.length} messages</span>
+</div>
+${msgHtml}
+</div>
+</body>
+</html>`;
+}
+
+// ── Incident Viewer ──────────────────────────────────────────────────────────
+function getIncidents() {
+  const incidentsDir = "/srv/dev/agents/_shared/incidents";
+  const incidents = [];
+  if (!fs.existsSync(incidentsDir)) return incidents;
+  try {
+    const files = fs.readdirSync(incidentsDir).filter(f => f.endsWith(".json")).sort().reverse();
+    for (const f of files) {
+      try {
+        const raw = fs.readFileSync(path.join(incidentsDir, f), "utf8");
+        const inc = JSON.parse(raw);
+        inc._file = f;
+        inc._mtime = fs.statSync(path.join(incidentsDir, f)).mtime;
+        incidents.push(inc);
+      } catch {}
+    }
+  } catch {}
+  return incidents;
+}
+
+function renderIncidents() {
+  const incidents = getIncidents();
+  const items = incidents.length === 0
+    ? '<div class="empty-state">No incidents reported — system is healthy</div>'
+    : incidents.map(inc => `
+      <div class="incident-card">
+        <div class="incident-header">
+          <div>
+            <span class="incident-agent">${esc(inc.agent || inc.from || '?')}</span>
+            <span class="incident-type ${esc((inc.type || 'manual').replace(/_/g, '-'))}">${esc((inc.type || 'manual').replace(/_/g, ' '))}</span>
+          </div>
+          <span class="incident-date">${inc._mtime ? inc._mtime.toISOString().slice(0,19).replace('T',' ') : '—'}</span>
+        </div>
+        <div class="incident-detail">${esc(inc.detail || inc.message || JSON.stringify(inc))}</div>
+      </div>`).join("");
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Incident Reports</title>
+<style>${CSS}</style>
+</head>
+<body>
+${headerHtml("incidents")}
+<div class="detail-page">
+<a class="detail-back" href="/">← Back to Dashboard</a>
+<h2>🚨 Incident Reports <span class="badge ${incidents.length > 0 ? 'red' : 'green'}" style="font-size:10px">${incidents.length}</span></h2>
+<div class="form-card" style="margin-bottom:20px">
+<h3 style="color:#e1e4e8;font-size:14px;margin-bottom:12px">Report New Incident</h3>
+<form onsubmit="reportIncident(event)">
+<div class="form-row">
+  <div class="form-group">
+    <label>Type</label>
+    <select id="incident-type">
+      <option value="manual">Manual</option>
+      <option value="bridge_down">Bridge Down</option>
+      <option value="message_lost">Message Lost</option>
+      <option value="duplicate_messages">Duplicate Messages</option>
+      <option value="error_loop">Error Loop</option>
+      <option value="timeout">Timeout</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>Agent</label>
+    <input type="text" id="incident-agent" placeholder="agent name" value="agent-generator" />
+  </div>
+</div>
+<div class="form-group">
+  <label>Description</label>
+  <textarea id="incident-detail" rows="3" placeholder="Describe the problem..." required></textarea>
+</div>
+<div class="form-actions">
+  <button type="submit" class="btn red">🚨 Report Incident</button>
+</div>
+</form>
+</div>
+${items}
+</div>
+<script>
+async function reportIncident(e) {
+  e.preventDefault();
+  const type = document.getElementById('incident-type').value;
+  const agent = document.getElementById('incident-agent').value.trim();
+  const detail = document.getElementById('incident-detail').value.trim();
+  if (!detail) return;
+
+  try {
+    const resp = await fetch('/api/incidents/report', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ type, agent, detail })
+    });
+    const result = await resp.json();
+    if (result.ok) {
+      location.reload();
+    } else {
+      alert('Error: ' + (result.error || 'Unknown'));
+    }
+  } catch(e) {
+    alert('Request failed: ' + e.message);
+  }
+}
+</script>
+</body>
+</html>`;
+}
+
+// ── System Stats Helper ──────────────────────────────────────────────────────
+function getSystemStats() {
+  const { execSync } = require("child_process");
+  const stats = {};
+
+  // Process memory for key processes
+  const pids = {};
+  const pidFiles = {
+    unifiedServer: path.join(AGENT_DIR, ".unified-server.pid"),
+    dispatcher: path.join(AGENT_DIR, ".mission-dispatcher.pid"),
+    dashboard: path.join(AGENT_DIR, ".web-dashboard.pid"),
+  };
+  for (const [name, pf] of Object.entries(pidFiles)) {
+    if (fs.existsSync(pf)) {
+      try {
+        pids[name] = parseInt(fs.readFileSync(pf, "utf8"));
+      } catch {}
+    }
+  }
+
+  const procStats = {};
+  for (const [name, pid] of Object.entries(pids)) {
+    try {
+      const out = execSync(`ps -p ${pid} -o rss=,etime=,pcpu= 2>/dev/null || echo ""`, { encoding: "utf8", timeout: 3000 }).trim();
+      if (out) {
+        const parts = out.trim().split(/\s+/);
+        procStats[name] = {
+          pid,
+          memMB: parts[0] ? (parseInt(parts[0]) / 1024).toFixed(1) : null,
+          uptime: parts[1] || null,
+          cpu: parts[2] || null,
+        };
+      }
+    } catch {}
+  }
+  stats.processes = procStats;
+
+  // Queue counts
+  const queue = getQueueSnapshot();
+  stats.queueCounts = {
+    todo: queue.todo.length,
+    inProgress: queue.inProgress.length,
+    done: queue.done.length,
+    failed: queue.failed.length,
+  };
+
+  // Agent counts
+  const agents = listAgents();
+  stats.agentCounts = {
+    total: agents.length,
+    online: agents.filter(a => a.running).length,
+  };
+
+  return stats;
+}
 // ── JSON Helpers ───────────────────────────────────────────────────────────────
 function json(res, data, status = 200) {
   res.writeHead(status, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
@@ -778,7 +1373,142 @@ const server = http.createServer(async (req, res) => {
   // ── API Routes ──────────────────────────────────────────────────────────
 
   // POST /api/services/:name/:action
-  if (req.method === "POST" && pathname.startsWith("/api/services/")) {
+  
+    // POST /api/generate — run agent generation
+    if (req.method === "POST" && pathname === "/api/generate") {
+      const body = await readBody(req);
+      try {
+        const data = JSON.parse(body);
+        const genPath = "/srv/dev/agents/agent-generator/tools/generate-agent.sh";
+        const configPath = "/tmp/web-gen-config-" + Date.now() + ".env";
+        const lines = Object.entries(data).map(([k, v]) => k + "=" + v);
+        fs.writeFileSync(configPath, lines.join("\n"));
+        const { execSync } = require("child_process");
+        let output = "";
+        let ok = false;
+        let error = "";
+        try {
+          output = execSync('bash "' + genPath + '" --config "' + configPath + '"', {
+            cwd: AGENT_DIR, encoding: "utf8", timeout: 60000
+          });
+          ok = true;
+        } catch (e) {
+          error = (e.stderr || e.message || "").toString();
+        }
+        try { fs.unlinkSync(configPath); } catch {}
+        return json(res, { ok, output: output.trim(), error, agentName: data.AGENT_NAME || "" });
+      } catch (e) {
+        return json(res, { ok: false, error: e.message }, 400);
+      }
+    }
+
+    // POST /api/missions/create — queue a new mission
+    if (req.method === "POST" && pathname === "/api/missions/create") {
+      const body = await readBody(req);
+      try {
+        const data = JSON.parse(body);
+        if (!data.title || !data.body) {
+          return json(res, { ok: false, error: "Title and body required" }, 400);
+        }
+        const now = new Date();
+        const ts = now.toISOString().replace(/[:.]/g, "-").slice(0, 19) + "-" +
+          String(Math.floor(Math.random() * 10000)).padStart(4, "0");
+        const id = ts;
+        const safeTitle = data.title.replace(/[^a-zA-Z0-9 -]/g, "").toLowerCase().slice(0, 60);
+        const filename = id + "-" + safeTitle.replace(/\s+/g, "-") + ".md";
+        const missionContent = `# Mission: "${esc(data.title)}"
+
+| Field | Detail |
+|-------|--------|
+| **Created** | ${now.toISOString()} |
+| **Status** | todo |
+| **Source** | ${esc(data.source || "Web Dashboard")} |
+| **PID** | - |
+
+## Original Request
+
+${data.body}
+
+## Progress Log
+
+| Timestamp | Event | Detail |
+|-----------|-------|--------|
+| ${now.toISOString()} | created | Mission queued from web dashboard |
+`;
+        const todoDir = path.join(MISSIONS_DIR, "todo");
+        if (!fs.existsSync(todoDir)) fs.mkdirSync(todoDir, { recursive: true });
+        fs.writeFileSync(path.join(todoDir, filename), missionContent);
+        return json(res, { ok: true, id, filename });
+      } catch (e) {
+        return json(res, { ok: false, error: e.message }, 500);
+      }
+    }
+
+    // POST /api/incidents/report — create an incident report
+    if (req.method === "POST" && pathname === "/api/incidents/report") {
+      const body = await readBody(req);
+      try {
+        const data = JSON.parse(body);
+        if (!data.detail) {
+          return json(res, { ok: false, error: "Detail required" }, 400);
+        }
+        const now = new Date();
+        const ts = now.toISOString().replace(/[:.]/g, "_").slice(0, 19) + "Z";
+        const id = require("crypto").randomUUID().slice(0, 8);
+        const agent = data.agent || "agent-generator";
+        const filename = ts + "-" + agent + "-" + id + ".json";
+        const incident = {
+          type: data.type || "manual",
+          agent,
+          detail: data.detail,
+          timestamp: now.toISOString(),
+          source: "web-dashboard",
+        };
+        const incidentsDir = "/srv/dev/agents/_shared/incidents";
+        if (!fs.existsSync(incidentsDir)) fs.mkdirSync(incidentsDir, { recursive: true });
+        fs.writeFileSync(path.join(incidentsDir, filename), JSON.stringify(incident, null, 2));
+        return json(res, { ok: true, filename });
+      } catch (e) {
+        return json(res, { ok: false, error: e.message }, 500);
+      }
+    }
+
+    // GET /api/system-stats — system resource stats
+    if (pathname === "/api/system-stats") {
+      return json(res, getSystemStats());
+    }
+
+    // GET /api/mailbox — mailbox messages for a specific agent
+    if (pathname === "/api/mailbox") {
+      const agent = url.searchParams.get("agent") || "";
+      const messages = getMailboxMessages();
+      const filtered = agent ? messages.filter(m => m._recipient === agent || m.from === agent) : messages;
+      return json(res, { messages: filtered, count: filtered.length });
+    }
+
+    // GET /api/mailbox/agents — list agents with mailboxes
+    if (pathname === "/api/mailbox/agents") {
+      const SHARED = "/srv/dev/agents/_shared";
+      const mailboxDir = path.join(SHARED, "mailbox");
+      const agents = [];
+      if (fs.existsSync(mailboxDir)) {
+        try {
+          const entries = fs.readdirSync(mailboxDir, { withFileTypes: true })
+            .filter(d => d.isDirectory());
+          for (const d of entries) {
+            const inboxDir = path.join(mailboxDir, d.name, "inbox");
+            let count = 0;
+            if (fs.existsSync(inboxDir)) {
+              try { count = fs.readdirSync(inboxDir).filter(f => f.endsWith(".json")).length; } catch {}
+            }
+            agents.push({ name: d.name, messages: count });
+          }
+        } catch {}
+      }
+      return json(res, { agents });
+    }
+
+if (req.method === "POST" && pathname.startsWith("/api/services/")) {
     const parts = pathname.replace("/api/services/", "").split("/");
     if (parts.length === 2) {
       const result = await controlService(parts[0], parts[1]);
@@ -811,7 +1541,57 @@ const server = http.createServer(async (req, res) => {
     return json(res, mission);
   }
 
-  // GET /api/status
+  
+  // GET /api/logs/stream/:source — SSE live log streaming
+  if (pathname.startsWith("/api/logs/stream/")) {
+    const source = pathname.replace("/api/logs/stream/", "");
+    const logPaths = {
+      "unified-server": path.join(AGENT_DIR, "logs", "unified-server.log"),
+      "dispatcher": path.join(AGENT_DIR, "logs", "dispatcher.log"),
+      "web-dashboard": path.join(AGENT_DIR, "logs", "web-dashboard.log"),
+      "errors": path.join(AGENT_DIR, "logs", "errors.log"),
+    };
+    const logPath = logPaths[source];
+    if (!logPath) {
+      res.writeHead(400);
+      return res.end("Unknown source");
+    }
+
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      "Connection": "keep-alive",
+      "Access-Control-Allow-Origin": "*",
+    });
+
+    let lastSize = fs.existsSync(logPath) ? fs.statSync(logPath).size : 0;
+    const interval = setInterval(() => {
+      try {
+        const currentSize = fs.existsSync(logPath) ? fs.statSync(logPath).size : 0;
+        if (currentSize > lastSize) {
+          const fd = fs.openSync(logPath, "r");
+          const buf = Buffer.alloc(currentSize - lastSize);
+          fs.readSync(fd, buf, 0, buf.length, lastSize);
+          fs.closeSync(fd);
+          const newLines = buf.toString("utf8").split("\n").filter(Boolean);
+          for (const line of newLines) {
+            let cls = "";
+            if (/error|fail|fatal|crash/i.test(line)) cls = "error";
+            else if (/warn|warning/i.test(line)) cls = "warn";
+            res.write('data: ' + JSON.stringify({ line, class: cls }) + '\n\n');
+          }
+          lastSize = currentSize;
+        }
+      } catch {}
+    }, 1000);
+
+    req.on("close", () => {
+      clearInterval(interval);
+    });
+    return;
+  }
+
+// GET /api/status
   if (pathname === "/api/status") {
     return json(res, {
       agents: listAgents(),
@@ -856,7 +1636,37 @@ const server = http.createServer(async (req, res) => {
 
   // ── Page Routes ─────────────────────────────────────────────────────────
 
-  // GET /logs — log viewer page
+  
+  // GET /generate — agent generation form
+  if (pathname === "/generate") {
+    const html = renderGenerateForm();
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    return res.end(html);
+  }
+
+  // GET /mission/new — mission creation form
+  if (pathname === "/mission/new") {
+    const html = renderMissionForm();
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    return res.end(html);
+  }
+
+  // GET /mailbox — inter-agent mailbox viewer
+  if (pathname === "/mailbox") {
+    const agentFilter = url.searchParams.get("agent") || "";
+    const html = renderMailbox(agentFilter);
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    return res.end(html);
+  }
+
+  // GET /incidents — incident viewer
+  if (pathname === "/incidents") {
+    const html = renderIncidents();
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    return res.end(html);
+  }
+
+// GET /logs — log viewer page
   if (pathname === "/logs") {
     const html = renderLogViewer(url.searchParams);
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });

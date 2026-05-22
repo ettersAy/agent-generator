@@ -14,7 +14,14 @@ type: project
 
 | Agent | Project | Created | Telegram | Status |
 |-------|---------|---------|----------|--------|
+| [Mouss-ai](/srv/dev/agents/mouss-ai) | Moussawer — Photography marketplace | 2026-05-09 | @MoussAIBot | Active (reference architecture) |
 | [Tamarine Bot](/srv/dev/agents/tamarine-bot) | TamarineApp — Student exercise generator and correction platform | 2026-05-19 | @Tamarine_bot | Active |
+| [Moutassafe7](/srv/dev/agents/moutassafe7) | General-Purpose Browser Execution — Web task automation | 2026-05-20 | @Moutassafe7_bot | Active |
+
+## Agent Types
+
+- **App-tied agents** (mouss-ai, tamarine-bot): Bound to a specific project directory, execute dev tasks on that project
+- **Browser-execution agent** (moutassafe7): Works on any website, not tied to a specific app. Uses Playwright MCP for browser automation
 
 ## Template Version
 

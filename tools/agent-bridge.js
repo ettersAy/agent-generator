@@ -200,9 +200,9 @@ Respond in plain text. Under 2000 characters.`;
     // Load .env to pass auth vars to Claude CLI
     const agentEnv = loadEnv(path.join(AGENT_DIR, ".env"));
     const execEnv = { ...process.env };
-    if (agentEnv.ANTHROPIC_AUTH) {
-      execEnv.ANTHROPIC_AUTH_TOKEN = agentEnv.ANTHROPIC_AUTH;
-      execEnv.ANTHROPIC_BASE_URL = agentEnv.ANTHROPIC_BASE_URL || execEnv.ANTHROPIC_BASE_URL;
+    if (agentEnv.ANTHROPIC_AUTH_TOKEN) {
+      execEnv.ANTHROPIC_AUTH_TOKEN = execEnv.ANTHROPIC_AUTH_TOKEN || agentEnv.ANTHROPIC_AUTH_TOKEN;
+      execEnv.ANTHROPIC_BASE_URL = execEnv.ANTHROPIC_BASE_URL || agentEnv.ANTHROPIC_BASE_URL;
     }
     if (agentEnv.CLAUDE_MAX_BUDGET) execEnv.CLAUDE_MAX_BUDGET = agentEnv.CLAUDE_MAX_BUDGET;
 

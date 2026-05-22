@@ -39,15 +39,32 @@ Do not stop until the entire mission is complete. Use available tools freely.
 PROMPT_EOF
 )
 
+# ── Detect session mode from mission metadata ──────────────────────────────
+# Default: "new" (fresh session). "continue" resumes the last Claude session.
+if grep -q '| \*\*Mode\*\* | continue |' "$MISSION_FILE" 2>/dev/null; then
+  log "Mode: continue (resuming last Claude session)"
+  CLAUDE_CONTINUE="-c"
+else
+  log "Mode: new (fresh Claude session)"
+  CLAUDE_CONTINUE=""
+fi
+
 # ── Execute Claude — output → file (zero memory) ───────────────────────────
 log "Launching Claude CLI..."
 START_TS=$(date +%s)
 
 cd "$AGENT_DIR"
-claude -p "$PROMPT" \
-  --output-format text \
-  --dangerously-skip-permissions \
-  > "$RESULT_FILE" 2>&1
+if [ -n "$CLAUDE_CONTINUE" ]; then
+  claude -c -p "$PROMPT" \
+    --output-format text \
+    --dangerously-skip-permissions \
+    > "$RESULT_FILE" 2>&1
+else
+  claude -p "$PROMPT" \
+    --output-format text \
+    --dangerously-skip-permissions \
+    > "$RESULT_FILE" 2>&1
+fi
 
 EXIT_CODE=$?
 END_TS=$(date +%s)

@@ -79,6 +79,32 @@ During any mission lasting more than 2 minutes, send periodic Telegram status up
 This prevents the user from wondering whether I crashed or hung.
 
 **Incident reports:** For every bug fix, create an incident at `missions/incidents/INC-YYYY-MM-DD-NNN.md`.
+	Also file inter-agent communication incidents via:
+	```bash
+	# Report a communication problem
+	agent-incident.sh <type> "<detail>"
+	```
+	Or via the MCP `report_incident` tool. Incidents go to `/srv/dev/agents/_shared/incidents/` and are visible to all agents.
+
+	---
+
+	## Inter-Agent Communication
+	I can communicate with other AI agents (mouss-ai, tamarine-bot, agent-generator) via MCP tools:
+	```bash
+	# List all agents and their health
+	# (use MCP: list_agents or agent_dashboard)
+
+	# Send a message/question to another agent
+	# (use MCP: send_message)
+
+	# Check my inbox for incoming messages
+	# (use MCP: check_inbox)
+
+	# Report a communication problem
+	agent-incident.sh bridge_down "My bridge is not responding"
+	```
+	Messages are delivered via file-based mailbox at `/srv/dev/agents/_shared/mailbox/`.
+	Each agent's bridge polls every 5 seconds and processes messages exactly once.
 
 ---
 
