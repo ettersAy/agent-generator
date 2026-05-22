@@ -72,7 +72,9 @@ EOF
 )"
 
 # ── Push ─────────────────────────────────────────────────────────────────────
-git push origin main
+BRANCH=$(git branch --show-current)
+echo "  Pushing to origin/$BRANCH..."
+git push origin "$BRANCH"
 
 echo ""
 echo "✅ Shipped."
