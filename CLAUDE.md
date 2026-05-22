@@ -24,6 +24,7 @@
 | `git-ship.sh` | `tools/git-ship.sh` | Stage, commit, push in one command. Shows context (status/diff/log) first. Use `--dry-run` to preview. |
 | `open-dashboard.sh` | `tools/open-dashboard.sh` | Start (if needed) and open the web dashboard in a browser. Use `--wiki` or `--logs` for specific pages. Single command replaces 4+ manual steps. |
 | `propagate-to-agents.sh` | `tools/propagate-to-agents.sh` | Apply a block of text to all agent CLAUDE.md files idempotently. Use `--dry-run` to preview, `--test` to verify agents received it. |
+| `agent-wait.sh` | `tools/agent-wait.sh` | Wait for inter-agent responses without triggering Bash sleep blocks. Uses safe 2s polling. Usage: `agent-wait.sh <agent> [timeout] [min]` or `--any [timeout]`. |
 
 ### Health Check — Single Command
 
@@ -48,6 +49,18 @@ Or via MCP: `mcp__inter-agent__health_check` with `mode: "full"|"compact"|"json"
 ### Hard Enforcement Rule
 
 **When I build an automation tool, my VERY NEXT action MUST be to use that tool for its intended purpose.** No exceptions. If I build `git-ship.sh`, I must use it for the next commit. If I build `health-check.sh`, I must use it for the next health check. Building a tool and then manually running the old commands is strictly forbidden — it proves I didn't test the tool and didn't learn.
+
+### Bash Safety — Never Trigger the Sleep Block
+
+The Bash tool blocks `sleep N` for N > ~5s. Never use long sleeps. Instead:
+
+| Blocked | Use |
+|---------|-----|
+| `sleep 30; check` | `Monitor` with `until <cond>; do sleep 2; done` |
+| `sleep 10; cmd` | `Bash` with `run_in_background: true` |
+| Waiting for agent responses | `bash tools/agent-wait.sh <agent> [timeout]` |
+
+**If a Bash call is blocked, don't just work around it —** file an incident with `agent-incident.sh`, save to memory, and build a helper to prevent recurrence.
 
 ### When NOT to automate
 - One-off investigative commands where the question itself is novel
