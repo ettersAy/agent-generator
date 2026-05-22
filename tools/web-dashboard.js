@@ -199,6 +199,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .mailbox-msg .msg-type.answer{background:#1b3824;color:#3fb950}
 .mailbox-msg .msg-type.config-request{background:#341a4a;color:#bc8cff}
 .mailbox-msg .msg-type.incident{background:#3a1c1c;color:#f85149}
+.mailbox-msg .msg-subject{color:#e6edf3;font-weight:500;margin-top:4px;font-size:12px}
 .mailbox-msg .msg-body{padding:8px;background:#161b22;border-radius:4px;color:#8b949e;margin-top:6px;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto}
 .incident-card{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:12px 16px;margin-bottom:8px;font-size:12px}
 .incident-card .incident-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:4px}
@@ -1097,7 +1098,8 @@ function renderMailbox(agentFilter) {
             <span class="msg-date">${m._mtime ? m._mtime.toISOString().slice(0,19).replace('T',' ') : '—'}</span>
           </div>
         </div>
-        <div class="msg-body">${esc(typeof m.message === 'string' ? m.message : JSON.stringify(m.message, null, 2))}</div>
+        <div class="msg-subject">${esc(m.subject || '(no subject)')}</div>
+        <div class="msg-body">${esc(typeof m.body === 'string' ? m.body : m.body ? JSON.stringify(m.body, null, 2) : '(empty body)')}</div>
       </div>`).join("");
 
   return `<!DOCTYPE html>
