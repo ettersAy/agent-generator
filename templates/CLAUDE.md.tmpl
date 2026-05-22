@@ -139,6 +139,9 @@ All agents share tools at `/srv/dev/agents/_shared/tools/`. Use them:
 | `_shared/tools/agent-incident.sh` | Report communication incidents |
 | `_shared/tools/agent-registry.sh` | Agent registry management |
 | `_shared/tools/inter-agent-test.sh` | Test inter-agent communication |
+| `_shared/tools/open-dashboard.sh` | Start and open web dashboard in browser (`--wiki`, `--logs`) |
+| `_shared/tools/propagate-to-agents.sh` | Apply a block to all agent CLAUDE.mds idempotently (`--dry-run`, `--test`) |
+| `_shared/tools/agent-wait.sh` | Wait for inter-agent responses with safe 2s polling — no sleep blocks |
 
 ### When NOT to automate
 - One-off investigative commands where the question itself is novel

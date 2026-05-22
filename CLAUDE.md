@@ -50,6 +50,23 @@ Or via MCP: `mcp__inter-agent__health_check` with `mode: "full"|"compact"|"json"
 
 **When I build an automation tool, my VERY NEXT action MUST be to use that tool for its intended purpose.** No exceptions. If I build `git-ship.sh`, I must use it for the next commit. If I build `health-check.sh`, I must use it for the next health check. Building a tool and then manually running the old commands is strictly forbidden — it proves I didn't test the tool and didn't learn.
 
+### Tool Sharing Rule — Which Tools Go Where
+
+| Criteria | Shared (`_shared/tools/`) | Local (`tools/`) |
+|----------|--------------------------|-------------------|
+| Needs other agents to use it | **Yes** | No |
+| Operates on the agent ecosystem as a whole | **Yes** | No |
+| Only relevant to agent-generator internals | No | **Yes** |
+| Uses agent-generator-specific paths | No | **Yes** |
+
+**Corollary:** When I build a shared tool, I MUST also propagate news of it to all agents' CLAUDE.md files using `propagate-to-agents.sh`. Sharing the file is not enough — agents need to know it exists.
+
+**Checklist after building any tool:**
+1. Is it shared? → `cp tools/foo.sh /srv/dev/agents/_shared/tools/foo.sh`
+2. Is it shared? → Run `propagate-to-agents.sh` to update all agent CLAUDE.mds
+3. Is it documented? → Update `knowledge/tools-catalog.md`
+4. Is it tested? → Use it once before shipping the commit
+
 ### Bash Safety — Never Trigger the Sleep Block
 
 The Bash tool blocks `sleep N` for N > ~5s. Never use long sleeps. Instead:
