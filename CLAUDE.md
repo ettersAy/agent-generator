@@ -22,6 +22,8 @@
 | `health-check.sh` | `tools/health-check.sh` | Comprehensive ecosystem health check — agents, bridges, dispatcher, orphans, mailboxes. Supports `--json`, `--compact`, `--fix`. |
 | `health_check` MCP | `_shared/mcp/inter-agent-bridge.js` | Same as above, callable directly from Claude missions via MCP. |
 | `git-ship.sh` | `tools/git-ship.sh` | Stage, commit, push in one command. Shows context (status/diff/log) first. Use `--dry-run` to preview. |
+| `open-dashboard.sh` | `tools/open-dashboard.sh` | Start (if needed) and open the web dashboard in a browser. Use `--wiki` or `--logs` for specific pages. Single command replaces 4+ manual steps. |
+| `propagate-to-agents.sh` | `tools/propagate-to-agents.sh` | Apply a block of text to all agent CLAUDE.md files idempotently. Use `--dry-run` to preview, `--test` to verify agents received it. |
 
 ### Health Check — Single Command
 
