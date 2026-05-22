@@ -118,6 +118,35 @@ cd {{PROJECT_DIR}}
 
 ---
 
+## Automation Discipline (CRITICAL)
+
+**Every time you find yourself running the same commands manually more than twice, automate them.**
+
+1. **Identify**: After any diagnostic/operational task, ask: "Did I run multiple manual commands that could be a single script or MCP tool?"
+2. **Automate**: Build the tool immediately — a shell script in `tools/`, an MCP tool, or both.
+3. **Document**: Add the tool to this CLAUDE.md so it's never forgotten.
+4. **Use it immediately**: After building an automation tool, your VERY NEXT action must be to use it. Building a tool and then running old manual commands proves you didn't test it.
+
+### Shared Ecosystem Tools
+
+All agents share tools at `/srv/dev/agents/_shared/tools/`. Use them:
+
+| Tool | Purpose |
+|------|---------|
+| `_shared/tools/health-check.sh` | Full ecosystem health check (agents, bridges, dispatcher, orphans, mailboxes). Modes: `--compact`, `--json`, `--fix`. |
+| `_shared/tools/git-ship.sh` | Stage, commit, push in one command. Shows context first. Use `--dry-run` to preview. |
+| `_shared/tools/agent-dashboard.sh` | Multi-agent dashboard overview |
+| `_shared/tools/agent-incident.sh` | Report communication incidents |
+| `_shared/tools/agent-registry.sh` | Agent registry management |
+| `_shared/tools/inter-agent-test.sh` | Test inter-agent communication |
+
+### When NOT to automate
+- One-off investigative commands where the question itself is novel
+- Commands that require live human judgment on every run
+- Exploratory debugging where the pattern hasn't stabilized yet
+
+---
+
 ## Critical Warnings
 <!-- Fill in with project-specific warnings after generation -->
 
