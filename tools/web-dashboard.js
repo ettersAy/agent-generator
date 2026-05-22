@@ -28,10 +28,11 @@ const path = require("path");
 const { exec } = require("child_process");
 
 const { listAgents, getAgentDetail } = require("./lib/agents");
-const { getQueueSnapshot, getDispatcherStatus, getLogTail, MISSIONS_DIR } = require("./lib/queue");
+const { getQueueSnapshot, getDispatcherStatus, getLogTail, MISSIONS_DIR, getAllAgentsMissionCounts } = require("./lib/queue");
 
 const AGENT_DIR = "/srv/dev/agents/agent-generator";
 const DOCS_DIR = path.join(AGENT_DIR, "docs");
+const KNOWLEDGE_DIR = path.join(AGENT_DIR, "knowledge");
 const PORT = parseInt(process.argv[2], 10) || 3099;
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
@@ -313,19 +314,30 @@ function renderDashboard() {
     </div>`;
   }
 
+  const allMissionCounts = getAllAgentsMissionCounts();
+
   const agentRows = agents.length === 0
     ? '<div class="empty-state">No agents found</div>'
-    : agents.map(a => `
+    : agents.map(a => {
+      const mc = allMissionCounts[a.name] || { todo: 0, inProgress: 0, done: 0, failed: 0 };
+      const missionInfo = mc.inProgress > 0
+        ? ` <span style="color:#d29922;font-size:10px">⚡${mc.inProgress} active</span>`
+        : mc.todo > 0
+          ? ` <span style="color:#8b949e;font-size:10px">📋${mc.todo} queued</span>`
+          : '';
+      return `
       <div class="agent-row">
         <div>
           <a href="/agent?name=${esc(encodeURIComponent(a.name))}">${esc(a.name)}</a>
           <span style="color:#8b949e;margin-left:8px;font-size:11px">${esc(a.description || '')}</span>
+          ${missionInfo}
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           <span style="font-size:11px;color:#484f58">${a.messageCount} msgs</span>
           <span class="tag ${a.running ? 'online' : 'offline'}">${a.running ? 'ONLINE' : 'OFFLINE'}</span>
         </div>
-      </div>`).join("");
+      </div>`;
+    }).join("");
 
   const agentCard = `<div class="card">
     <h2>🤖 Agents <span class="badge green">${agents.length}</span></h2>
@@ -461,21 +473,35 @@ function renderMissionDetail(missionId) {
     ${headerHtml("")}<div class="detail-page"><a class="detail-back" href="/">← Back to Dashboard</a><h2>Mission Not Found</h2><p>No mission with ID: ${esc(missionId)}</p></div></body></html>`;
   }
 
-  // Determine which directory the mission file is in
+  // Find the actual directory by scanning all possible locations
   let missionDir = "";
-  for (const [key, dir] of Object.entries({ todo: "todo", inProgress: "in-progress", done: "done", failed: "failed" })) {
-    if (mission[key] || key === mission.status) { missionDir = dir; break; }
-  }
-  if (!missionDir) {
-    if (mission.status === "todo") missionDir = "todo";
-    else if (mission.status === "in-progress" || mission.status === "dispatched") missionDir = "in-progress";
-    else missionDir = "done";
-  }
-
-  const missionFile = path.join(MISSIONS_DIR, missionDir, mission.filename);
+  let missionFile = "";
   let missionContent = "";
-  if (fs.existsSync(missionFile)) {
-    try { missionContent = fs.readFileSync(missionFile, "utf8"); } catch {}
+  for (const dir of ["todo", "in-progress", "done", "failed"]) {
+    const fp = path.join(MISSIONS_DIR, dir, mission.filename);
+    if (fs.existsSync(fp)) {
+      missionDir = dir;
+      missionFile = fp;
+      try { missionContent = fs.readFileSync(fp, "utf8"); } catch {}
+      break;
+    }
+  }
+  if (!missionFile) {
+    // Fallback: try to find by scanning all agent dirs too
+    const agentsDir = "/srv/dev/agents";
+    for (const entry of fs.readdirSync(agentsDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      for (const dir of ["todo", "in-progress", "done", "failed"]) {
+        const fp = path.join(agentsDir, entry.name, "missions", dir, mission.filename);
+        if (fs.existsSync(fp)) {
+          missionDir = `${entry.name}/missions/${dir}`;
+          missionFile = fp;
+          try { missionContent = fs.readFileSync(fp, "utf8"); } catch {}
+          break;
+        }
+      }
+      if (missionFile) break;
+    }
   }
 
   // Result file
@@ -747,13 +773,17 @@ function toggleLive() {
 // ── Wiki Index Page ────────────────────────────────────────────────────────────
 function renderWikiIndex() {
   let docFiles = [];
-  if (fs.existsSync(DOCS_DIR)) {
-    try {
-      docFiles = fs.readdirSync(DOCS_DIR)
-        .filter((f) => f.endsWith(".md"))
-        .sort();
-    } catch {}
+  // Scan both docs/ and knowledge/ directories
+  for (const scanDir of [DOCS_DIR, KNOWLEDGE_DIR]) {
+    if (fs.existsSync(scanDir)) {
+      try {
+        for (const f of fs.readdirSync(scanDir).filter(f => f.endsWith(".md"))) {
+          if (!docFiles.includes(f)) docFiles.push(f);
+        }
+      } catch {}
+    }
   }
+  docFiles.sort();
 
   const items = docFiles.length === 0
     ? '<p style="text-align:center;color:#484f58;padding:24px">No documentation files found</p>'
@@ -790,8 +820,12 @@ function renderWikiPage(pageName) {
     ${headerHtml("wiki")}<div class="detail-page"><a class="detail-back" href="/wiki">← Back to Wiki</a><h2>Invalid Page Name</h2></div></body></html>`;
   }
 
-  const mdPath = path.join(DOCS_DIR, pageName + ".md");
-  if (!fs.existsSync(mdPath)) {
+  let mdPath = "";
+  for (const scanDir of [DOCS_DIR, KNOWLEDGE_DIR]) {
+    const p = path.join(scanDir, pageName + ".md");
+    if (fs.existsSync(p)) { mdPath = p; break; }
+  }
+  if (!mdPath) {
     return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Not Found</title><style>${CSS}</style></head><body>
     ${headerHtml("wiki")}<div class="detail-page"><a class="detail-back" href="/wiki">← Back to Wiki</a><h2>Page Not Found</h2><p>No documentation page: ${esc(pageName)}</p></div></body></html>`;
   }

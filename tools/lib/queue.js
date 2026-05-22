@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 const AGENT_DIR = "/srv/dev/agents/agent-generator";
+const AGENTS_DIR = "/srv/dev/agents";
 const MISSIONS_DIR = path.join(AGENT_DIR, "missions");
 
 function getQueueSnapshot() {
@@ -30,7 +31,6 @@ function getQueueSnapshot() {
         const statusMatch = content.match(/\| \*\*Status\*\* \| (.+) \|/);
         const pidMatch = content.match(/\| \*\*PID\*\* \| (.+) \|/);
 
-        // Check if a runner is currently active
         let runnerAlive = false;
         let runnerPid = null;
         if (key === "inProgress") {
@@ -44,13 +44,10 @@ function getQueueSnapshot() {
           }
         }
 
-        // Check result file
         const resultFile = path.join(MISSIONS_DIR, "results", f.replace(".md", "_result.md"));
         let resultSize = 0;
         if (fs.existsSync(resultFile)) {
-          try {
-            resultSize = fs.statSync(resultFile).size;
-          } catch {}
+          try { resultSize = fs.statSync(resultFile).size; } catch {}
         }
 
         result[key].push({
@@ -68,6 +65,27 @@ function getQueueSnapshot() {
   }
 
   return result;
+}
+
+// Aggregate mission counts across ALL agents (not just agent-generator)
+function getAllAgentsMissionCounts() {
+  const agents = {};
+  if (!fs.existsSync(AGENTS_DIR)) return agents;
+  for (const entry of fs.readdirSync(AGENTS_DIR, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    if (entry.name === "telegram-agent-kit" || entry.name === "_shared") continue;
+    const missionsDir = path.join(AGENTS_DIR, entry.name, "missions");
+    if (!fs.existsSync(missionsDir)) continue;
+    const counts = { todo: 0, inProgress: 0, done: 0, failed: 0 };
+    for (const [key, dir] of [["todo","todo"],["inProgress","in-progress"],["done","done"],["failed","failed"]]) {
+      const d = path.join(missionsDir, dir);
+      if (fs.existsSync(d)) {
+        try { counts[key] = fs.readdirSync(d).filter(f => f.endsWith(".md")).length; } catch {}
+      }
+    }
+    agents[entry.name] = counts;
+  }
+  return agents;
 }
 
 function getDispatcherStatus() {
@@ -94,4 +112,4 @@ function getLogTail(logFile, lines = 30) {
   }
 }
 
-module.exports = { getQueueSnapshot, getDispatcherStatus, getLogTail, MISSIONS_DIR };
+module.exports = { getQueueSnapshot, getDispatcherStatus, getLogTail, MISSIONS_DIR, getAllAgentsMissionCounts };

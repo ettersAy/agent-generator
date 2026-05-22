@@ -49,6 +49,37 @@ function log(msg) {
   } catch {}
 }
 
+function logError(msg) {
+  const line = `[${fmtTs()}] ERROR ${msg}`;
+  console.error(line);
+  const errLogFile = path.join(AGENT_DIR, "logs", "errors.log");
+  try {
+    const dir = path.dirname(errLogFile);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.appendFileSync(errLogFile, line + "\n");
+  } catch {}
+}
+
+function fileIncident(type, detail) {
+  const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  const incident = {
+    id,
+    type,
+    agent: AGENT_NAME,
+    timestamp: ts(),
+    detail: detail.slice(0, 500),
+    status: "open",
+  };
+  try {
+    if (!fs.existsSync(INCIDENT_DIR)) fs.mkdirSync(INCIDENT_DIR, { recursive: true });
+    const filename = `${ts().replace(/:/g, "_")}-${AGENT_NAME}-${id}.json`;
+    fs.writeFileSync(path.join(INCIDENT_DIR, filename), JSON.stringify(incident, null, 2));
+    log(`Incident filed: ${id} (${type})`);
+  } catch (e) {
+    log(`Failed to file incident: ${e.message}`);
+  }
+}
+
 function loadEnv(filePath) {
   if (!fs.existsSync(filePath)) return {};
   const env = {};
@@ -223,6 +254,8 @@ Respond in plain text. Under 2000 characters.`;
         resolve(result.slice(0, 3000));
       } catch (e2) {
         log(`ERROR: Claude fallback also failed: ${e2.message.slice(0, 150)}`);
+        logError(`Claude spawn failed twice for question from ${fromAgent}: ${e2.message.slice(0, 200)}`);
+        fileIncident("claude_spawn_failed", `Claude CLI failed for question from ${fromAgent}: ${e2.message.slice(0, 200)}`);
         resolve(`[${AGENT_NAME} could not process this question: ${e2.message.slice(0, 200)}]`);
       }
     }
