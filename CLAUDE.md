@@ -43,6 +43,10 @@ bash tools/health-check.sh --json
 
 Or via MCP: `mcp__inter-agent__health_check` with `mode: "full"|"compact"|"json"|"fix"`.
 
+### Hard Enforcement Rule
+
+**When I build an automation tool, my VERY NEXT action MUST be to use that tool for its intended purpose.** No exceptions. If I build `git-ship.sh`, I must use it for the next commit. If I build `health-check.sh`, I must use it for the next health check. Building a tool and then manually running the old commands is strictly forbidden — it proves I didn't test the tool and didn't learn.
+
 ### When NOT to automate
 - One-off investigative commands where the question itself is novel
 - Commands that require live human judgment on every run
