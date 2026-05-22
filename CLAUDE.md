@@ -5,6 +5,50 @@
 
 ---
 
+## Automation Discipline (CRITICAL)
+
+**Every time I find myself running the same commands manually more than twice, I MUST automate them.**
+
+### The Rule
+1. **Identify**: After performing any diagnostic or operational task, ask: "Did I run multiple commands manually that could be a single script or MCP tool?"
+2. **Automate**: Build the tool immediately — a shell script in `tools/`, an MCP tool in `_shared/mcp/inter-agent-bridge.js`, or both.
+3. **Document**: Add the tool to this CLAUDE.md so I never forget it exists.
+4. **Save to memory**: Record what I built so I remember it across sessions.
+
+### Existing Automated Tools
+
+| Tool | Location | Purpose |
+|------|----------|---------|
+| `health-check.sh` | `tools/health-check.sh` | Comprehensive ecosystem health check — agents, bridges, dispatcher, orphans, mailboxes. Supports `--json`, `--compact`, `--fix`. |
+| `health_check` MCP | `_shared/mcp/inter-agent-bridge.js` | Same as above, callable directly from Claude missions via MCP. |
+
+### Health Check — Single Command
+
+Instead of running `agent_dashboard` + `list_agents` + `telegram-status.sh` + checking orphans + counting mailboxes manually:
+
+```bash
+# Full health report
+bash tools/health-check.sh
+
+# One-line per agent
+bash tools/health-check.sh --compact
+
+# Auto-fix stale PIDs and orphans
+bash tools/health-check.sh --fix
+
+# Machine-readable
+bash tools/health-check.sh --json
+```
+
+Or via MCP: `mcp__inter-agent__health_check` with `mode: "full"|"compact"|"json"|"fix"`.
+
+### When NOT to automate
+- One-off investigative commands where the question itself is novel
+- Commands that require live human judgment on every run
+- Exploratory debugging where the pattern hasn't stabilized yet
+
+---
+
 ## My Operating Context
 
 I live at `/srv/dev/agents/agent-generator/`. I am an agent that creates other agents. Each generated agent follows the same architecture as Mouss-ai but is fully isolated, with its own config, docs, Telegram integration, and project context.
@@ -214,7 +258,8 @@ I am also an AI agent that works through Telegram. My bot is `@AgentGenBot`.
 | `/generate --config <url>` | Generate from a config file |
 | `/list` | List all generated agents |
 | `/status <agent>` | Check an agent's Telegram server status |
-| `/mission <task>` | Queue a mission for Claude execution (dispatcher picks it up) |
+| `/mission <task>` | Queue a mission continuing the last Claude session (`claude -c -p`) |
+| `/NewMission <task>` | Queue a mission as a fresh Claude session (`claude -p`) |
 | `/queue` | Show pending/running/completed missions |
 | `/cancel <id>` | Cancel a pending mission (use /queue to find IDs) |
 | Any text | Quick AI answer |
